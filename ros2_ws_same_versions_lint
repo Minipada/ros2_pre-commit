@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -e
+
+# This checks all ROS packages in the workspace have the same version
+
+# Arguments parsing
+# Example:
+# ./ros2_ws_same_versions_lint --src="./workspace/src"
+help() {
+usage="$(basename "$0") --src=<SRC> [ --help ]
+
+Check all ROS packages in the workspace have the same version
+
+Arguments:
+--help   Show this help text
+--src    Source folder of all ros packages (mandatory)
+"
+    echo "${usage}"
+}
+
+for i in "$@"
+do
+case $i in
+    --src=*)
+    SRC="${i#*=}"
+    shift # past argument=value
+    ;;
+    --help)
+    HELP=YES
+    shift # past argument with no value
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+done
+
+# Arguments check
+if [ -n "${HELP}" ]; then
+    help
+    exit 0
+fi
+
+if [ -z "${SRC}" ]; then
+    help
+    exit 1
+fi
+
+# Will throw an error if not installed
+if ! command -v xmllint &> /dev/null
+then
+    echo "xmllint could not be found. Please install it"
+    exit 1
+fi
+
+# Checking package.xml
+
+result=$(find "${SRC}" -name package.xml -exec xmllint --xpath 'package/version/text()' {} \; |  tr '\n' ' ')
+
+array=()
+IFS=', ' read -r -a array <<< "${result}"
+
+version="${array[0]}"
+
+if [ ! "${#array[@]}" -gt 0 ] && [ "$(printf "%s\000" "${array[@]}" | LC_ALL=C sort -z -u | grep -z -c .)" -eq 1 ] ; then
+    echo "Version is different in all packages: ${result}"
+    exit 1
+fi
+
+# Checking setup.py
+# shellcheck disable=SC2044
+for file in $(find "${SRC}" -name setup.py); do
+    if ! grep -q "version=\"${version}\"" "${file}"; then
+        cat "${file}"
+        echo "Version is incorrect in ${file}. Should be ${version}"
+        exit 1
+    fi
+done

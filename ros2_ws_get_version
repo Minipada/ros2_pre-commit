@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -e
+
+# This gets the version of the packages
+
+# Arguments parsing
+# Example:
+# ./ros2_ws_get_version --src="./ros/src"
+help() {
+usage="$(basename "$0") --src=<SRC> [ --help ]
+
+Get version to check
+
+Arguments:
+--help   Show this help text
+--src    Source folder of all ros packages (mandatory)
+"
+    echo "${usage}"
+}
+
+for i in "$@"
+do
+case $i in
+    --src=*)
+    SRC="${i#*=}"
+    shift # past argument=value
+    ;;
+    --help)
+    HELP=YES
+    shift # past argument with no value
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+done
+
+# Arguments check
+if [ -n "${HELP}" ]; then
+    help
+    exit 0
+fi
+
+if [ -z "${SRC}" ]; then
+    help
+    exit 1
+fi
+
+# Will throw an error if not installed
+if ! command -v xmllint &> /dev/null
+then
+    echo "xmllint could not be found. Please install it"
+    exit 1
+fi
+
+# Checking package.xml
+
+result=$(find "${SRC}" -name package.xml -exec xmllint --xpath 'package/version/text()' {} \; |  tr '\n' ' ')
+
+array=()
+IFS=', ' read -r -a array <<< "${result}"
+
+version="${array[0]}"
+
+echo "${version}"

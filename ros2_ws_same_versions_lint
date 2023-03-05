@@ -8,13 +8,14 @@ set -e
 # Example:
 # ./ros2_ws_same_versions_lint --src="./workspace/src"
 help() {
-usage="$(basename "$0") --src=<SRC> [ --help ]
+usage="$(basename "$0") --src=<SRC> [--regex=<REGEX>] [ --help ]
 
 Check all ROS packages in the workspace have the same version
 
 Arguments:
 --help   Show this help text
 --src    Source folder of all ros packages (mandatory)
+--regex  Package name need to match a regex (optional, Default=\".*\")
 "
     echo "${usage}"
 }
@@ -24,6 +25,10 @@ do
 case $i in
     --src=*)
     SRC="${i#*=}"
+    shift # past argument=value
+    ;;
+    --regex=*)
+    REGEX="${i#*=}"
     shift # past argument=value
     ;;
     --help)
@@ -47,6 +52,10 @@ if [ -z "${SRC}" ]; then
     exit 1
 fi
 
+if [ -z "${REGEX}" ]; then
+    REGEX=".*"
+fi
+
 # Will throw an error if not installed
 if ! command -v xmllint &> /dev/null
 then
@@ -56,8 +65,7 @@ fi
 
 # Checking package.xml
 
-result=$(find "${SRC}" -name package.xml -exec xmllint --xpath 'package/version/text()' {} \; |  tr '\n' ' ')
-
+result=$(find "${SRC}" -maxdepth 2 -regextype egrep -regex ".*${REGEX}/package.xml" -exec xmllint --xpath 'package/version/text()' {} \; |  tr '\n' ' ')
 array=()
 IFS=', ' read -r -a array <<< "${result}"
 

@@ -5,3 +5,9 @@
   entry: ros2_ws_same_versions_lint
   language: script
   pass_filenames: false
+- id: ros2_ws_set_metadata
+  name: Ensure ROS2 package metadata are set
+  description: Ensures package metadata in the workspace are set (author, license, description)
+  entry: ros2_ws_set_metadata
+  language: script
+  pass_filenames: false

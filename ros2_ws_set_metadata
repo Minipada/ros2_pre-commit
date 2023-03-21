@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -e
+
+# This checks all ROS packages in the workspace have the same version
+
+# Arguments parsing
+# Example:
+# ./ros2_ws_set_metadata --src="./workspace/src"
+help() {
+usage="$(basename "$0") --src=<SRC> [--regex=<REGEX>] [ --help ]
+
+Check all ROS packages in the workspace have the license set
+
+Arguments:
+--help   Show this help text
+--src    Source folder of all ros packages (mandatory)
+--regex  Package name need to match a regex (optional, Default=\".*\")
+"
+    echo "${usage}"
+}
+
+for i in "$@"
+do
+case $i in
+    --src=*)
+    SRC="${i#*=}"
+    shift # past argument=value
+    ;;
+    --regex=*)
+    REGEX="${i#*=}"
+    shift # past argument=value
+    ;;
+    --help)
+    HELP=YES
+    shift # past argument with no value
+    ;;
+    *)
+    # unknown option
+    ;;
+esac
+done
+
+# Arguments check
+if [ -n "${HELP}" ]; then
+    help
+    exit 0
+fi
+
+if [ -z "${SRC}" ]; then
+    help
+    exit 1
+fi
+
+if [ -z "${REGEX}" ]; then
+    REGEX=".*"
+fi
+
+# Will throw an error if not installed
+if ! command -v xmllint &> /dev/null
+then
+    echo "xmllint could not be found. Please install it"
+    exit 1
+fi
+
+ret_code="0"
+
+# License
+while IFS=  read -r -d $'\n'; do
+    if [[ $(xmllint --xpath 'package/license/text()' "${REPLY}") == *"TODO"* ]]; then
+        echo "Need to set license in ${REPLY}"
+        ret_code="1"
+    fi
+done < <(find "${SRC}" -maxdepth 2 -regextype egrep -regex ".*${REGEX}/package.xml")
+
+# Maintainer
+while IFS=  read -r -d $'\n'; do
+    if [[ $(xmllint --xpath 'package/maintainer/text()' "${REPLY}") == *"root"* ]]; then
+        echo "Need to set maintainer in ${REPLY}"
+        ret_code="1"
+    fi
+done < <(find "${SRC}" -maxdepth 2 -regextype egrep -regex ".*${REGEX}/package.xml")
+
+# Description
+while IFS=  read -r -d $'\n'; do
+    if [[ $(xmllint --xpath 'package/description/text()' "${REPLY}") == *"TODO"* ]]; then
+        echo "Need to set description in ${REPLY}"
+        ret_code="1"
+    fi
+done < <(find "${SRC}" -maxdepth 2 -regextype egrep -regex ".*${REGEX}/package.xml")
+
+exit ${ret_code}

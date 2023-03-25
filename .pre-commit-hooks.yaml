@@ -1,8 +1,8 @@
 ---
-- id: ros2_ws_same_versions_lint
+- id: ros2_ws_same_versions
   name: Ensure all ROS2 packages are of the same version
   description: Ensures all packages in the workspace are of the same version
-  entry: ros2_ws_same_versions_lint
+  entry: ros2_ws_same_versions
   language: script
   pass_filenames: false
 - id: ros2_ws_set_metadata

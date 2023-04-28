@@ -1,6 +1,6 @@
-# ROS2 Pre-commit
+# ROS 2 Pre-commit
 
-Here are some out of the box [pre-commit](https://pre-commit.com/) hooks focused on ROS2 workspaces.
+Here are some out of the box [pre-commit](https://pre-commit.com/) hooks focused on ROS 2 workspaces.
 
 Example:
 

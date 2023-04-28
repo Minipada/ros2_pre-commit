@@ -1,12 +1,12 @@
 ---
 - id: ros2_ws_same_versions
-  name: Ensure all ROS2 packages are of the same version
+  name: Ensure all ROS 2 packages are of the same version
   description: Ensures all packages in the workspace are of the same version
   entry: ros2_ws_same_versions
   language: script
   pass_filenames: false
 - id: ros2_ws_set_metadata
-  name: Ensure ROS2 package metadata are set
+  name: Ensure ROS 2 package metadata are set
   description: Ensures package metadata in the workspace are set (author, license, description)
   entry: ros2_ws_set_metadata
   language: script
